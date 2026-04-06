@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADİAK İmtahan Sınağı</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --surface2: #1c2030;
+    --border: #2a3045;
+    --accent: #c9a84c;
+    --accent2: #e8c97a;
+    --text: #e8e4d9;
+    --text-muted: #8a8a9a;
+    --correct: #4caf7a;
+    --wrong: #e05555;
+    --correct-bg: #0f2a1a;
+    --wrong-bg: #2a0f0f;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 60px;
+  }
+
+  /* === HEADER === */
+  .header {
+    width: 100%;
+    max-width: 780px;
+    text-align: center;
+    padding: 40px 0 32px;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin: 20px auto 0;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: var(--accent2);
+    line-height: 1.15;
+  }
+  .header p {
+    margin-top: 10px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-style: italic;
+  }
+
+  /* === START SCREEN === */
+  #start-screen {
+    width: 100%;
+    max-width: 640px;
+    margin-top: 8px;
+  }
+  .start-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    text-align: center;
+  }
+  .start-card .icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+  }
+  .start-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--accent2);
+    margin-bottom: 12px;
+  }
+  .start-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 8px;
+  }
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 24px 0 28px;
+  }
+  .info-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .info-item .val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--accent);
+    display: block;
+  }
+  .info-item .lbl {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+    display: block;
+  }
+
+  /* === QUIZ SCREEN === */
+  #quiz-screen { width: 100%; max-width: 780px; display: none; }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .q-counter {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .progress-wrap {
+    flex: 1;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+    min-width: 120px;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .timer-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .timer-box .time-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--text);
+  }
+  .timer-box.warn .time-val { color: var(--wrong); }
+
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 28px 24px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .question-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .q-num {
+    font-size: 0.78rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+    font-style: normal;
+  }
+  .q-text {
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .option-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 0.97rem;
+    line-height: 1.5;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.18s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--surface2);
+    transform: translateX(3px);
+  }
+  .option-btn .opt-label {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.18s;
+  }
+  .option-btn:hover:not(:disabled) .opt-label {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+  .option-btn.correct {
+    border-color: var(--correct);
+    background: var(--correct-bg);
+    color: #a8f0c0;
+  }
+  .option-btn.correct .opt-label {
+    background: var(--correct);
+    border-color: var(--correct);
+    color: #000;
+  }
+  .option-btn.wrong {
+    border-color: var(--wrong);
+    background: var(--wrong-bg);
+    color: #f0a8a8;
+  }
+  .option-btn.wrong .opt-label {
+    background: var(--wrong);
+    border-color: var(--wrong);
+    color: #fff;
+  }
+  .option-btn:disabled { cursor: default; transform: none; }
+
+  .feedback-bar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: none;
+    line-height: 1.6;
+  }
+  .feedback-bar.show { display: block; }
+  .feedback-bar.correct-fb { border-color: var(--correct); color: #a8f0c0; }
+  .feedback-bar.wrong-fb { border-color: var(--wrong); color: #f0a8a8; }
+
+  /* === BUTTONS === */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 28px;
+    border-radius: 10px;
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 0.97rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    border: none;
+    text-decoration: none;
+  }
+  .btn-gold {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #0d0f14;
+  }
+  .btn-gold:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(201,168,76,0.3); }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .nav-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* === RESULT SCREEN === */
+  #result-screen { width: 100%; max-width: 780px; display: none; }
+
+  .result-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px 28px;
+    text-align: center;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .grade-ring {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    border: 4px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    position: relative;
+  }
+  .grade-ring .pct {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--accent2);
+    line-height: 1;
+  }
+  .grade-ring .pct-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .result-grade {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: var(--accent2);
+    margin-bottom: 8px;
+  }
+  .result-msg {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-style: italic;
+    margin-bottom: 24px;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 500px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 12px;
+    text-align: center;
+  }
+  .stat-card .sv { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--text); display: block; }
+  .stat-card .sl { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; display: block; }
+  .stat-card.s-correct .sv { color: var(--correct); }
+  .stat-card.s-wrong .sv { color: var(--wrong); }
+
+  .review-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: var(--accent2);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+  }
+  .review-item.ri-correct { border-left: 3px solid var(--correct); }
+  .review-item.ri-wrong { border-left: 3px solid var(--wrong); }
+  .review-item .ri-qnum {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .review-item .ri-q { font-size: 0.93rem; line-height: 1.55; color: var(--text); margin-bottom: 10px; }
+  .review-item .ri-answers { display: flex; flex-direction: column; gap: 4px; }
+  .review-item .ri-ans { font-size: 0.85rem; display: flex; align-items: flex-start; gap: 8px; }
+  .review-item .ri-ans .badge {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    padding: 2px 7px;
+    border-radius: 99px;
+    font-weight: 600;
+    margin-top: 1px;
+  }
+  .badge-correct { background: var(--correct-bg); color: var(--correct); border: 1px solid var(--correct); }
+  .badge-wrong { background: var(--wrong-bg); color: var(--wrong); border: 1px solid var(--wrong); }
+  .badge-given { background: #1a1a2e; color: #8888bb; border: 1px solid #333366; }
+
+  .result-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>ADİAK Sınaq İmtahanı</h1>
+  <p>Azərbaycan dilində İşgüzar və Akademik Kommunikasiya</p>
+</div>
+
+<!-- START -->
+<div id="start-screen">
+  <div class="start-card">
+    <div class="icon">📚</div>
+    <h2>İmtahana Hazırsınızmı?</h2>
+    <p>Bu sınaqda 1–400 və 600–704 sual aralığından seçilmiş <strong>50 sual</strong> sizə təqdim ediləcək.</p>
+    <div class="info-grid">
+      <div class="info-item"><span class="val">50</span><span class="lbl">Sual sayı</span></div>
+      <div class="info-item"><span class="val">60</span><span class="lbl">Dəqiqə</span></div>
+      <div class="info-item"><span class="val">1–400<br>600–704</span><span class="lbl">Sual aralığı</span></div>
+      <div class="info-item"><span class="val">Birdəfəlik</span><span class="lbl">Cavab dəyişdirilmir</span></div>
+    </div>
+    <p>Hər suala cavab verdikdən sonra <strong>növbəti suala keçəcəksiniz</strong>. Geri dönmək mümkün deyil.</p>
+    <br>
+    <button class="btn btn-gold" onclick="startQuiz()" style="width:100%;font-size:1.05rem;padding:16px;">
+      ▶ İmtahana Başla
+    </button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz-screen">
+  <div class="top-bar">
+    <span class="q-counter" id="q-counter">Sual 1 / 50</span>
+    <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+    <div class="timer-box" id="timer-box">⏱ <span class="time-val" id="timer-val">60:00</span></div>
+  </div>
+
+  <div class="question-card">
+    <div class="q-num" id="q-num">Sual №1</div>
+    <div class="q-text" id="q-text"></div>
+  </div>
+
+  <div class="options-list" id="options-list"></div>
+
+  <div class="feedback-bar" id="feedback-bar"></div>
+
+  <div class="nav-row">
+    <button class="btn btn-gold" id="next-btn" onclick="nextQuestion()" disabled>
+      Növbəti →
+    </button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result-screen">
+  <div class="result-hero">
+    <div class="grade-ring" id="grade-ring">
+      <span class="pct" id="result-pct">0%</span>
+      <span class="pct-label">Nəticə</span>
+    </div>
+    <div class="result-grade" id="result-grade">—</div>
+    <div class="result-msg" id="result-msg"></div>
+    <div class="stats-grid">
+      <div class="stat-card s-correct">
+        <span class="sv" id="r-correct">0</span>
+        <span class="sl">Düzgün cavab</span>
+      </div>
+      <div class="stat-card s-wrong">
+        <span class="sv" id="r-wrong">0</span>
+        <span class="sl">Yanlış cavab</span>
+      </div>
+      <div class="stat-card">
+        <span class="sv" id="r-time">—</span>
+        <span class="sl">Keçən vaxt</span>
+      </div>
+    </div>
+    <div class="result-actions">
+      <button class="btn btn-gold" onclick="restartQuiz()">↺ Yenidən Başla</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="review-title">📋 Sual İcmalı</div>
+    <div id="review-list"></div>
+  </div>
+</div>
+
+<script>
+// =====================================================
+// ALL QUESTIONS — ranges 1-400 and 600-704
+// Format: { id, q, opts: [{label, text}], correct (0-based index) }
+// =====================================================
+const ALL_QUESTIONS = [
+{id:1,q:"Biri dilin təmizliyini qoruyub saxlayan amillərə aid deyil:",opts:[{l:"A",t:"Əcnəbi sözlər lüzumsuz işlədilməməlidir."},{l:"B",t:"Başqasını heysiyyətinə toxunmaq məqsədi daşıyan ədəbsiz, qeyri-etik sözlərə yer verilməməlidir."},{l:"C",t:"Nitqdə məhəlli dialektlərdən daha çox istifadə olunmalıdır."},{l:"D",t:"Jarqon sözlərin işlədilməsi məqbul sayılmamalıdır."},{l:"E",t:"Tüfeyli sözlərlə bağlı qüsurlar aradan qaldırılmalıdır."}],correct:2},
+{id:2,q:"Biri nitqin məntiqliliyi ilə əlaqədar deyil:",opts:[{l:"A",t:"Nitqin ən mühüm keyfiyyətidir."},{l:"B",t:"İki qanunauyğun şərti var: dilxarici və dildaxili."},{l:"C",t:"Dəqiqliklə əlaqədardır."},{l:"D",t:"Nitqin obrazlığı, emosional keyfiyyəti, təsirliliyi deməkdir."},{l:"E",t:"Obyektiv gerçəkliyi doğru, dürüst əks etdirən hökm, fikirdir."}],correct:3},
+{id:3,q:"Fikirlərdən biri nitqin ifadəliliyinə aid deyil:",opts:[{l:"A",t:"Düzgün, dəqiq, təmiz, məntiqi, təsirli, ifadəli və s. olmalıdır."},{l:"B",t:"Başlıca meyar danışanın geniş söz ehtiyatına malik olmasıdır."},{l:"C",t:"Ünsiyyət mühiti, dilin struktur sahələri və üslub sistemi ilə şərtlənir."},{l:"D",t:"Dilin bütün sistemləri – fonetika, leksika, intonasiya, üslubiyyat iştirak edir."},{l:"E",t:"Təfəkkürlə, dili yaxşı bilməklə əlaqədardır."}],correct:1},
+{id:4,q:"Nitqin aydınlığı nədir? Səhv cavabı göstərin:",opts:[{l:"A",t:"Tələffüzlə sıx bağlı olmasıdır."},{l:"B",t:"Diksiya əsas amillərdən biridir."},{l:"C",t:"Əsas amil danışanın nitq obyekti haqqında mükəmməl məlumata malik olmasıdır."},{l:"D",t:"Nitqdə dialektizm və varvarizmlərdən istifadə edilməsidir."},{l:"E",t:"Dinləyici və oxucunun nitqi asanlıqla anlaması, başa düşməsidir."}],correct:3},
+{id:5,q:"Nitqin zənginliyi nədir? Cavablardan biri yanlışdır:",opts:[{l:"A",t:"Dil və nitq əlaqəsi əsasında meydana gəlir."},{l:"B",t:"Bütün üslublar üçün səciyyəvidir."},{l:"C",t:"Nitqdə müxtəlif və təkrarlanmayan dil vahidlərinin işlədilməsidir."},{l:"D",t:"Başlıca meyar danışanın geniş söz ehtiyatına malik olmasıdır."},{l:"E",t:"Ən zəruri sözlərlə, söz birləşmələri və cümlələrlə ifadə olunmasıdır."}],correct:4},
+{id:6,q:"Verilənlərdən biri nitqin sadəliyi üçün əsas şərt deyil:",opts:[{l:"A",t:"yığcamlıq"},{l:"B",t:"anlaşıqlı olması"},{l:"C",t:"cümlənin qısalığı"},{l:"D",t:"yalançı pafos"},{l:"E",t:"aydınlıq"}],correct:3},
+{id:7,q:"Dilin təmizliyini qoruyub saxlamaq üçün nələrə əməl etmək lazımdır? Səhv cavabı göstərin:",opts:[{l:"A",t:"Nitqdə məhəlli dialektlərə, yerli şivələrə məxsus danışıq tərzinə yol verilməməlidir."},{l:"B",t:"Mədəni danışıqda söyüş və qarğışlara yer verilməməlidir."},{l:"C",t:"Jarqon sözlərin işlədilməsi məqbul sayılmamalıdır."},{l:"D",t:"Tüfeyli sözlərlə bağlı qüsurlar aradan qaldırılmamalıdır."},{l:"E",t:"Əcnəbi sözlər lüzumsuz işlədilməməlidir."}],correct:3},
+{id:9,q:"Nitqin yığcamlılığı nədir?",opts:[{l:"A",t:"Danışanın geniş söz ehtiyatına malik olmasıdır."},{l:"B",t:"Nitqin aydın, asan, anlaşıqlı, düzgün olmasıdır."},{l:"C",t:"Nitqin məzmunca dolğun olmasıdır."},{l:"D",t:"Fikrin dil vasitələri ilə düzgün verilməsinin göstəricisidir."},{l:"E",t:"Ən zəruri sözlərlə, söz birləşmələri və cümlələrlə ifadə olunmasıdır."}],correct:4},
+{id:11,q:"Əmrin hazırlanması və tətbiqinə dair verilən tələblərdən biri yanlışdır:",opts:[{l:"A",t:"Şərh hissəsində əmr verilməsi üçün əsas götürülən faktlar ifadə edilir."},{l:"B",t:"Əmr, bir qayda olaraq, şərh və sərəncam hissələrindən ibarət olur."},{l:"C",t:"Əmrin sərəncam hissəsi «əmr edirəm» sözləri ilə başlanır."},{l:"D",t:"Təqvim ili boyunca nömrələnir və müvafiq kitabda qeydə alınır."},{l:"E",t:"Əmr nömrələnmir."}],correct:4},
+{id:13,q:"Rəsmi sənədlər olan cərgəni göstərin:",opts:[{l:"A",t:"protokol, izahat"},{l:"B",t:"akt, zəmanət"},{l:"C",t:"vəkalətnamə, ərizə"},{l:"D",t:"arayış, hesabat"},{l:"E",t:"sərəncam, bəyanat"}],correct:4},
+{id:14,q:"Bu rəsmi sənədin xüsusi forması yoxdur. Formaca fərmandan və qərardan fərqləndirmək çətindir. Söhbət hansı əməli yazı növündən gedir?",opts:[{l:"A",t:"müqavilə"},{l:"B",t:"nota"},{l:"C",t:"bəyanat"},{l:"D",t:"sərəncam"},{l:"E",t:"zəmanət"}],correct:3},
+{id:16,q:"Hansı sıra rəsmi sənədlərdən ibarətdir?",opts:[{l:"A",t:"arayış, əqd"},{l:"B",t:"ərizə, təşəkkür"},{l:"C",t:"tərcümeyi-hal, izahat"},{l:"D",t:"reklam, hesabat"},{l:"E",t:"sərəncam, fərman"}],correct:4},
+{id:17,q:"\"Qeyd, işarə\" mənasını verən və bir hökumətin başqa hökumətə rəsmi yazılı müraciətini özündə əks etdirən sənəd növünü göstərin:",opts:[{l:"A",t:"əmr"},{l:"B",t:"fərman"},{l:"C",t:"işgüzar məktub"},{l:"D",t:"protokol"},{l:"E",t:"nota"}],correct:4},
+{id:18,q:"Ərəb sözü olub \"anlatma, izahetmə, şərhetmə, aydınlaşdırma, bildirmə\" mənalarında işlənir. Söhbət hansı rəsmi sənəddən gedir?",opts:[{l:"A",t:"nota"},{l:"B",t:"fərman"},{l:"C",t:"qanun"},{l:"D",t:"bəyanat"},{l:"E",t:"sərəncam"}],correct:3},
+{id:20,q:"\"Nota\" sözü mənşəcə hansı dilə məxsusdur?",opts:[{l:"A",t:"fars"},{l:"B",t:"fransız"},{l:"C",t:"ərəb"},{l:"D",t:"latın"},{l:"E",t:"yunan"}],correct:3},
+{id:22,q:"Şəxsin öz xətti ilə yazılmayan əməli yazı nümunəsi hansıdır?",opts:[{l:"A",t:"məktub"},{l:"B",t:"tərcümeyi-hal"},{l:"C",t:"ərizə"},{l:"D",t:"əmr"},{l:"E",t:"izahat"}],correct:3},
+{id:25,q:"Verilən fikir hansı rəsmi sənədə aiddir? \"Dövlət və inzibati hüquqda dövlət idarəetmə orqanının aktıdır. Hüquqi xarakter daşımaqla, vəzifəli şəxsə verilmiş səlahiyyət daxilində çıxarılır.\"",opts:[{l:"A",t:"nota"},{l:"B",t:"əmr"},{l:"C",t:"sərəncam"},{l:"D",t:"müraciət"},{l:"E",t:"bəyanat"}],correct:2},
+{id:27,q:"Sərəncamlar məzmunca neçə yerə bölünür?",opts:[{l:"A",t:"5"},{l:"B",t:"6"},{l:"C",t:"3"},{l:"D",t:"4"},{l:"E",t:"2"}],correct:4},
+{id:29,q:"\"Dəvət olunan mütəxəssislər yarımdairə şəklində üzü auditoriyaya, aparıcı isə ortada oturur\". Göstərilən xüsusiyyət aiddir:",opts:[{l:"A",t:"işgüzar söhbətə"},{l:"B",t:"işgüzar diskussiyaya"},{l:"C",t:"işgüzar iclasa"},{l:"D",t:"işgüzar danışıqlara"},{l:"E",t:"telefon söhbətinə"}],correct:1},
+{id:33,q:"Güclü arqumentə aid deyil:",opts:[{l:"A",t:"rəhbər sənədlər"},{l:"B",t:"tanınmış mənbələrdən gətirilən sitatlar"},{l:"C",t:"yoxlanılmış statistik informasiyalar"},{l:"D",t:"saxta sənədlərdən çıxarılan nəticələr"},{l:"E",t:"real həyatda istifadə edilən qanunlar"}],correct:3},
+{id:36,q:"Biri işgüzar danışıqların məqsədinə aid deyil:",opts:[{l:"A",t:"qərarların qəbul edilməsi"},{l:"B",t:"tədbirlər keçirilməsinin razılaşdırılması"},{l:"C",t:"zəif tərəflərini müəyyənləşdirmək"},{l:"D",t:"əməkdaşlığın koordinasiyası"},{l:"E",t:"konfliktlərin yaradılması"}],correct:4},
+{id:40,q:"Aşağıdakılardan hansı şifahi işgüzar ünsiyyətin dialoji növlərinə aid deyil?",opts:[{l:"A",t:"işgüzar iclas"},{l:"B",t:"işgüzar danışıqlar"},{l:"C",t:"işgüzar söhbət"},{l:"D",t:"məruzə"},{l:"E",t:"müşavirələr"}],correct:3},
+{id:43,q:"Biri natiqliyin sahəsi deyil:",opts:[{l:"A",t:"siyasi natiqlik"},{l:"B",t:"akademik natiqlik"},{l:"C",t:"diplomatik natiqlik"},{l:"D",t:"fəlsəfi natiqlik"},{l:"E",t:"işgüzar natiqlik"}],correct:3},
+{id:44,q:"Nitqdə özünəməxsusluqdur, bir şəxsin başqalarından fərqli danışması və yazmasıdır. Verilən xüsusiyyətlər nitqin hansı keyfiyyətinə aiddir?",opts:[{l:"A",t:"nitqin orijinallığı"},{l:"B",t:"nitqin ifadəliliyi"},{l:"C",t:"nitqin dəqiqliyi"},{l:"D",t:"nitqin ahəngdarlığı"},{l:"E",t:"nitqin sadəliyi"}],correct:0},
+{id:46,q:"Alimin nitqi hansı natiqliyə aiddir?",opts:[{l:"A",t:"Məhkəmə natiqliyinə"},{l:"B",t:"İctimai-siyasi natiqliyə"},{l:"C",t:"Diplomatik natiqliyə"},{l:"D",t:"Akademik natiqliyə"},{l:"E",t:"Məişət natiqliyinə"}],correct:3},
+{id:50,q:"Verilən tələblər nitqi hansı keyfiyyətinə aiddir? 1) Nitqdə məhəlli dialektlərə yol verilməməlidir. 2) Əcnəbi sözlər lüzumsuz işlədilməməlidir. 3) Tüfeyli sözlərlə bağlı qüsurlar aradan qaldırılmalıdır. 4) Jarqon sözlərin işlədilməsi məqbul sayılmamalıdır.",opts:[{l:"A",t:"nitqin təmizliyi"},{l:"B",t:"nitqin sadəliyi"},{l:"C",t:"nitqin dəqiqliyi"},{l:"D",t:"nitqin zənginliyi"},{l:"E",t:"nitqin ahəngdarlığı"}],correct:0},
+{id:56,q:"\"Diplomatik akt növüdür. Hər hansı bir hüquq və ya tələb, digər dövlətin düzgün olmayan aktlarına qarşı etiraz bildirilir\". Verilən xüsusiyyətlər hansı sənədə aiddir?",opts:[{l:"A",t:"reklam"},{l:"B",t:"hesabat"},{l:"C",t:"məktub"},{l:"D",t:"etiket"},{l:"E",t:"nota"}],correct:4},
+{id:57,q:"Rəsmi sənədlər olan cərgəni göstərin:",opts:[{l:"A",t:"məktub, təqdimat"},{l:"B",t:"izahat, ərizə"},{l:"C",t:"arayış, etibarnamə"},{l:"D",t:"hesabat, izahat"},{l:"E",t:"nota, fərman"}],correct:4},
+{id:64,q:"\"Əmr\" sözü hansı dilə məxsusdur?",opts:[{l:"A",t:"rus"},{l:"B",t:"fars"},{l:"C",t:"latın"},{l:"D",t:"ərəb"},{l:"E",t:"türk"}],correct:3},
+{id:68,q:"Protokol nə vaxt yazılır?",opts:[{l:"A",t:"qiymətli bir əşyanı müəyyən təşkilatdan almaq məqsədilə"},{l:"B",t:"hər hansı faktı aşkarlamaq məqsədilə"},{l:"C",t:"hər hansı idarə və ya şəxsin adından iş görən zaman"},{l:"D",t:"ezamiyyətə göndərilən zaman"},{l:"E",t:"konfrans, iclas, qurultayda söylənilən çıxışları qeyd etmək məqsədilə"}],correct:4},
+{id:70,q:"Əsassız arqumentlərə aiddir: 1. Saxta faktlara söykənən fikirlər 2. şübhəli, yoxlanılmamış mənbələrə istinad 3. qanuni qüvvəsini itirmiş qərarlar 4. dəqiq müəyyənləşdirilmiş faktlar 5. şəxsi xarakterli mülahizələr",opts:[{l:"A",t:"3, 4, 5"},{l:"B",t:"2, 3, 4"},{l:"C",t:"1, 2, 4"},{l:"D",t:"1, 2, 3"},{l:"E",t:"1, 4, 5"}],correct:3},
+{id:77,q:"Hansı işgüzar kommunikasiya formasında nəticə olaraq saziş, müqavilə, qərarların qəbul edilməsi tələb olunur?",opts:[{l:"A",t:"telefon söhbətləri"},{l:"B",t:"işgüzar söhbət"},{l:"C",t:"mətbuat konfransı"},{l:"D",t:"işgüzar danışıq"},{l:"E",t:"işgüzar diskussiya"}],correct:3},
+{id:81,q:"Sosial şəbəkələr bizə hansı imkanları verir? Səhv cavabı göstərin:",opts:[{l:"A",t:"Avtomatlaşdırılmış sosial mühit şəraitində özümüzə aid olan məlumatları paylaşmaq"},{l:"B",t:"Şəbəkə daxilində maraqlar üzrə müxtəlif birliklər formalaşdırmaq"},{l:"C",t:"Əhəmiyyətli olan materialları bölüşmək"},{l:"D",t:"Digər şəbəkə iştirakçıları ilə ünsiyyəti məhdudlaşdırmaq"},{l:"E",t:"Şəbəkə iştirakçıları ilə fikir mübadiləsi aparmaq"}],correct:3},
+{id:82,q:"Biri plagiatçılıq deyil:",opts:[{l:"A",t:"Başqalarının əsərlərini istinad vermədən öz əsərinə köçürmək"},{l:"B",t:"Başqalarına məxsus hər hansı mətni istinad vermədən yazınızda qeyd etmək"},{l:"C",t:"Mənbəyi göstərilmədən əsəri köçürməklə yeni əsər yaratmaq"},{l:"D",t:"Öz əsərini elmi jurnalda nəşr etdirmək"},{l:"E",t:"Özgənin elmi əsərini öz adı ilə nəşr etdirmək"}],correct:3},
+{id:87,q:"Texniki cəhətdən sosial şəbəkələrin neçə tipi var?",opts:[{l:"A",t:"4"},{l:"B",t:"5"},{l:"C",t:"3"},{l:"D",t:"1"},{l:"E",t:"2"}],correct:4},
+{id:88,q:"Bəşəriyyət yeni bir kommunikasiya dövrünə nə vaxt qədəm qoydu?",opts:[{l:"A",t:"XXI əsrin əvvəllərində"},{l:"B",t:"XIX əsrin sonlarında"},{l:"C",t:"XIX əsrin əvvəllərində"},{l:"D",t:"XX əsrin ortalarında"},{l:"E",t:"XX əsrin əvvəllərində"}],correct:0},
+{id:94,q:"Protokol kimlər tərəfindən imzalanır?",opts:[{l:"A",t:"sədr və katib"},{l:"B",t:"məruzəçi"},{l:"C",t:"iclasda iştirak edən bütün şəxslər"},{l:"D",t:"yalnız katib"},{l:"E",t:"yalnız sədr"}],correct:0},
+{id:102,q:"\"Hesabat\" sözü mənşəcə hansı dilə məxsusdur?",opts:[{l:"A",t:"ərəb"},{l:"B",t:"rus"},{l:"C",t:"türk"},{l:"D",t:"fransız"},{l:"E",t:"yunan"}],correct:0},
+{id:107,q:"İşgüzar ünsiyyət prosesində işgüzar söhbətin neçə əsas növü müəyyənləşdirilir?",opts:[{l:"A",t:"6"},{l:"B",t:"5"},{l:"C",t:"2"},{l:"D",t:"4"},{l:"E",t:"3"}],correct:2},
+{id:116,q:"Qrupşəkilli kommunikativ prosesin neçə əsas effektivlik meyarı var?",opts:[{l:"A",t:"2"},{l:"B",t:"6"},{l:"C",t:"5"},{l:"D",t:"3"},{l:"E",t:"4"}],correct:3},
+{id:121,q:"Hərbçilərin bir-birilə salamlaşması, islam adətlərinə müvafiq olaraq ziyarətgahlara salam verilməsi hansı jestlərə aiddir?",opts:[{l:"A",t:"səmtləyici jestlər"},{l:"B",t:"emosional jestlər"},{l:"C",t:"ritmik jestlər"},{l:"D",t:"simvolik jestlər"},{l:"E",t:"təsvirləyən jestlər"}],correct:3},
+{id:128,q:"Kommunikator kimdir?",opts:[{l:"A",t:"informasiyadan istifadə edən"},{l:"B",t:"informasiyanı qəbul edən"},{l:"C",t:"informasiyanı toplayan"},{l:"D",t:"informasiyanı verən"},{l:"E",t:"informasiyanı nizamlayan"}],correct:3},
+{id:136,q:"\"Protokol\" sözü mənşəyinə görə hansı dilə aiddir?",opts:[{l:"A",t:"yunan"},{l:"B",t:"ərəb"},{l:"C",t:"fars"},{l:"D",t:"türk"},{l:"E",t:"fransız"}],correct:0},
+{id:141,q:"\"Təliqə\" sözü mənşəcə hansı dilə məxsusdur?",opts:[{l:"A",t:"latın"},{l:"B",t:"rus"},{l:"C",t:"yunan"},{l:"D",t:"ərəb"},{l:"E",t:"türk"}],correct:3},
+{id:184,q:"\"Məktub\" sözü hansı mənşəlidir?",opts:[{l:"A",t:"fars"},{l:"B",t:"yunan"},{l:"C",t:"ərəb"},{l:"D",t:"tatar"},{l:"E",t:"türk"}],correct:2},
+{id:198,q:"Ritorik qanun sisteminin mərhələlərinin ardıcıllığı hansı sırada düzgün göstərilmişdir?",opts:[{l:"A",t:"Yadda saxlama, Tələffüz, İnvensiya, Elokusiya, Dispozisya"},{l:"B",t:"Tələffüz, Yadda saxlama, Elokusiya, Dispozisya, İnvensiya"},{l:"C",t:"Dispozisya, Yadda saxlama, Elokusiya, Tələffüz, İnvensiya"},{l:"D",t:"İnvensiya, Dispozisya, Elokusiya, Yadda saxlama, Tələffüz"},{l:"E",t:"Elokusiya, Yadda saxlama, Dispozisya, İnvensiya, Tələffüz"}],correct:3},
+{id:216,q:"İnsanlar iş vaxtlarının ən çox hissəsini nəyə həsr edir?",opts:[{l:"A",t:"danışmağa"},{l:"B",t:"baxmağa"},{l:"C",t:"yazmağa"},{l:"D",t:"oxumağa"},{l:"E",t:"dinləməyə"}],correct:4},
+{id:237,q:"Bioqrafiya nədir?",opts:[{l:"A",t:"bir şəxsin öz əli ilə yazdığı tərcümeyi-hal"},{l:"B",t:"bir şəxsin əmək fəaliyyətini təsvir edən rəsmi sənəd"},{l:"C",t:"bir şəxsin özü haqqında yazdığı ətraflı məlumat"},{l:"D",t:"kiminsə tərcümeyi-halının başqası tərəfindən yazılması"},{l:"E",t:"dövlətin hər bir vətəndaşa verdiyi hüquqi sənəd"}],correct:3},
+{id:253,q:"Natiqliyin nəzəri cəhətdən dərk edilməsi ilə bağlı yazılmış ilk əsərlər hansı dövrə aiddir?",opts:[{l:"A",t:"III əsrə"},{l:"B",t:"orta əsrlərə"},{l:"C",t:"müasir dövrə"},{l:"D",t:"antik dövrə"},{l:"E",t:"IV əsrə"}],correct:3},
+{id:262,q:"Tavtalogiya nədir?",opts:[{l:"A",t:"Bir köklü sözlərin (paronim) mənasını düzgün ifadə etməkdir."},{l:"B",t:"Nitqdə mahiyyət əks olunmur."},{l:"C",t:"Məntiqi səhvdir."},{l:"D",t:"Mənaca yaxın olan sözlərin cümlədə təkrarıdır."},{l:"E",t:"Müxtəlif çalara malik, əsaslandırılmamış sözlərdən istifadə zamanı meydana gəlir."}],correct:3},
+{id:263,q:"\"Biblioqrafiya\" mənşəcə hansı dilə mənsubdur?",opts:[{l:"A",t:"rus"},{l:"B",t:"fransız"},{l:"C",t:"latın"},{l:"D",t:"ingilis"},{l:"E",t:"yunan"}],correct:4},
+{id:280,q:"Latın dilindən götürülüb və mənası «gözlənilmədən» deməkdir:",opts:[{l:"A",t:"məruzə"},{l:"B",t:"tezis"},{l:"C",t:"mühazirə"},{l:"D",t:"improvizə"},{l:"E",t:"çıxış"}],correct:3},
+{id:288,q:"Tərcümeyi-halı xasiyyətnamədən fərqləndirən əsas əlamət hansıdır?",opts:[{l:"A",t:"1-ci sənəd hər hansı şəxs barəsində başqası tərəfindən, 2-ci sənəd isə şəxsin özü tərəfindən yazılır."},{l:"B",t:"Xasiyyətnamələrin heç biri dövlət əhəmiyyəti daşımır."},{l:"C",t:"Xasiyyətnaməni yalnız idarə rəhbəri imzalayır."},{l:"D",t:"1-ci sənəd şəxsin özü tərəfindən, 2-ci sənəd isə müəyyən şəxs barəsində rəhbərlik tərəfindən yazılır."},{l:"E",t:"Tərcümeyi-halı ən azı iki məsul şəxs imzalayır."}],correct:3},
+{id:295,q:"Tərcümeyi-halın 1-ci cümləsində hansı durğu işarələrindən istifadə olunur?",opts:[{l:"A",t:"sual və vergül"},{l:"B",t:"iki nöqtə"},{l:"C",t:"nöqtəli vergül"},{l:"D",t:"nida və tire"},{l:"E",t:"vergül və nöqtə"}],correct:4},
+{id:307,q:"Xudahafiz! Əlvida! Salamat qalın! Sağ olun! Allah amanında! Bunlar hansı nitq etiketinə aiddir?",opts:[{l:"A",t:"rəsmi müraciət etiketləri"},{l:"B",t:"qeyri-rəsmi müraciət etiketləri"},{l:"C",t:"təbrik etiketləri"},{l:"D",t:"ayrılma etiketləri"},{l:"E",t:"görüşmə etiketləri"}],correct:3},
+{id:313,q:"Mənşəyinə görə \"...\" fransız sözüdür. Nöqtələrin yerinə uyğun gələn variantı seçin:",opts:[{l:"A",t:"xarakter"},{l:"B",t:"kommunikasiya"},{l:"C",t:"etiket"},{l:"D",t:"imic"},{l:"E",t:"temperament"}],correct:2},
+{id:320,q:"Hansılar etibarnamə növü kimi düzgün göstərilmişdir? 1. birdəfəlik etibarnamə 2. daimi etibarnamə 3. xüsusi etibarnamə 4. ümumi və baş etibarnamə 5. universal etibarnamə",opts:[{l:"A",t:"1,2,4"},{l:"B",t:"2,4,5"},{l:"C",t:"1,2,5"},{l:"D",t:"2,3,5"},{l:"E",t:"1,3,4"}],correct:4},
+{id:330,q:"Rəsmi-işgüzar sənədlərə aid edilmiş xüsusiyyətlərdən biri yanlışdır:",opts:[{l:"A",t:"yığcamlıq"},{l:"B",t:"çoxmənalılıq"},{l:"C",t:"birmənalılıq"},{l:"D",t:"dəqiqlik"},{l:"E",t:"konkretlik"}],correct:1},
+{id:332,q:"Əməli yazılar ədəbi dilin hansı üslubuna aiddir?",opts:[{l:"A",t:"publisistik"},{l:"B",t:"bədii"},{l:"C",t:"elmi"},{l:"D",t:"fərdi"},{l:"E",t:"rəsmi-işgüzar"}],correct:4},
+{id:337,q:"Məzmununa görə ərizənin neçə növü var?",opts:[{l:"A",t:"1"},{l:"B",t:"3"},{l:"C",t:"5"},{l:"D",t:"2"},{l:"E",t:"4"}],correct:3},
+{id:344,q:"Standart forma və şablonlardan daha çox istifadə olunan üslub hansıdır?",opts:[{l:"A",t:"bədii"},{l:"B",t:"publisistik"},{l:"C",t:"elmi"},{l:"D",t:"rəsmi-işgüzar"},{l:"E",t:"məişət"}],correct:3},
+{id:354,q:"Ərəb mənşəli sözdür, \"aydın, aşkar, bilinən\" mənasındadır. Söhbət hansı sənəddən gedir?",opts:[{l:"A",t:"zəmanət"},{l:"B",t:"hesabat"},{l:"C",t:"qaimə"},{l:"D",t:"məlumat"},{l:"E",t:"qəbz"}],correct:3},
+{id:367,q:"Dilin dövlət dili olması hansı üslubda müəyyən edilir?",opts:[{l:"A",t:"publisistik"},{l:"B",t:"elmi"},{l:"C",t:"məişət"},{l:"D",t:"rəsmi-işgüzar"},{l:"E",t:"bədii"}],correct:3},
+{id:374,q:"\"Cansız əşyalara, əmtəəyə, ticarət markasına tətbiq edilən obrazdır\". Verilən xüsusiyyət obyektinə görə imicin hansı növünə aiddir?",opts:[{l:"A",t:"Milli imic"},{l:"B",t:"Peşəkar imic"},{l:"C",t:"Korporativ imic"},{l:"D",t:"Maddi imic"},{l:"E",t:"Şəxsi imic"}],correct:3},
+{id:386,q:"\"İntonasiya\" sözü mənşəcə hansı dilə məxsusdur?",opts:[{l:"A",t:"rus"},{l:"B",t:"türk"},{l:"C",t:"latın"},{l:"D",t:"yunan"},{l:"E",t:"fars"}],correct:2},
+{id:397,q:"Ünsiyyət neçə formada xarakterizə olunur?",opts:[{l:"A",t:"6"},{l:"B",t:"3"},{l:"C",t:"4"},{l:"D",t:"2"},{l:"E",t:"5"}],correct:3},
+{id:403,q:"\"Zəmanət\" sözü mənşəyi hansı dilə məxsusdur?",opts:[{l:"A",t:"yunan"},{l:"B",t:"fars"},{l:"C",t:"türk"},{l:"D",t:"ərəb"},{l:"E",t:"latın"}],correct:3},
+// 600-704 range
+{id:608,q:"Polemika nədir?",opts:[{l:"A",t:"Böyük və aktual elmi problemləri müzakirə etmək məqsədilə elmi təşkilatların nümayəndələrinin yığıncağıdır."},{l:"B",t:"Fikirlərin, mövqelərin kəsişməsidir."},{l:"C",t:"Hər hansı bir məsələnin birlikdə müzakirəsidir, iclasdır."},{l:"D",t:"Hansısa konkret sahədə aparılan söz və fikir çəkişməsidir."},{l:"E",t:"Müəyyən elmi problemin müzakirəsi ilə əlaqədar alimlərinin yığıncağıdır."}],correct:3},
+{id:612,q:"\"Debat\" sözü mənşəcə hansı dilə aiddir?",opts:[{l:"A",t:"yunan"},{l:"B",t:"ərəb"},{l:"C",t:"fars"},{l:"D",t:"ingilis"},{l:"E",t:"latın"}],correct:3},
+{id:616,q:"\"Diskussiya\" sözü mənşəcə hansı dilə aiddir?",opts:[{l:"A",t:"yunan"},{l:"B",t:"türk"},{l:"C",t:"italyan"},{l:"D",t:"latın"},{l:"E",t:"ingilis"}],correct:3},
+{id:624,q:"Töhmət barədə yürüdülən fikirlərdən biri yanlışdır:",opts:[{l:"A",t:"Töhmət hər hansı bir müəssisənin iclasında müzakirə olunduqdan sonra verilə bilər."},{l:"B",t:"\"Töhmət\" ərəb sözü olub, mənası məzəmmət, danlaq deməkdir."},{l:"C",t:"Töhmət idarə, təşkilat və müəssisələrdə əmr kitabına yazılmaqla rəsmiləşdirilir."},{l:"D",t:"Töhmət intizam tənbehlərindən biridir."},{l:"E",t:"Töhmət yalnız yazılı formada verilir."}],correct:4},
+{id:636,q:"İstənilən ünsiyyət aktı neçə hissədən ibarətdir?",opts:[{l:"A",t:"2"},{l:"B",t:"4"},{l:"C",t:"6"},{l:"D",t:"5"},{l:"E",t:"3"}],correct:4},
+{id:640,q:"\"Etiket\" sözü mənşəcə hansı dilə aiddir?",opts:[{l:"A",t:"ərəb"},{l:"B",t:"fars"},{l:"C",t:"latın"},{l:"D",t:"ingilis"},{l:"E",t:"fransız"}],correct:4},
+{id:651,q:"\"Polemika\" sözü mənşəcə hansı dilə aiddir?",opts:[{l:"A",t:"italyan"},{l:"B",t:"ingilis"},{l:"C",t:"ərəb"},{l:"D",t:"yunan"},{l:"E",t:"rus"}],correct:3},
+{id:658,q:"\"Konfrans\" sözü mənşəcə hansı dilə məxsusdur?",opts:[{l:"A",t:"latın"},{l:"B",t:"ərəb"},{l:"C",t:"yunan"},{l:"D",t:"fars"},{l:"E",t:"türk"}],correct:0},
+{id:659,q:"Mübahisənin neçə növü var?",opts:[{l:"A",t:"2"},{l:"B",t:"5"},{l:"C",t:"6"},{l:"D",t:"4"},{l:"E",t:"3"}],correct:3},
+{id:672,q:"\"Diksiya\" sözü mənşəcə hansı dilə mənsubdur?",opts:[{l:"A",t:"ingilis"},{l:"B",t:"rus"},{l:"C",t:"fransız"},{l:"D",t:"latın"},{l:"E",t:"yunan"}],correct:3},
+{id:683,q:"Töhmətin neçə növü vardır?",opts:[{l:"A",t:"1"},{l:"B",t:"5"},{l:"C",t:"4"},{l:"D",t:"2"},{l:"E",t:"3"}],correct:3},
+{id:697,q:"Etika hansı elmin tədqiqat sahəsidir?",opts:[{l:"A",t:"dilçilik"},{l:"B",t:"psixologiya"},{l:"C",t:"estetika"},{l:"D",t:"fəlsəfə"},{l:"E",t:"pedaqogika"}],correct:3},
+{id:699,q:"De Yagerin formalaşdırdığı işgüzar etiketin neçə əsas prinsipi var?",opts:[{l:"A",t:"5"},{l:"B",t:"3"},{l:"C",t:"6"},{l:"D",t:"4"},{l:"E",t:"2"}],correct:2},
+{id:701,q:"\"Etiket\" sözünü kimin adı ilə bağlayırlar?",opts:[{l:"A",t:"İspaniya kralı II Filipp"},{l:"B",t:"Almaniya kralı I Otto"},{l:"C",t:"Napoleon Bonapartın"},{l:"D",t:"Frank kralı Xlodviq"},{l:"E",t:"Fransa kralı XIV Lüdoviqin"}],correct:4},
+{id:704,q:"Aşağıdakılardan biri işgüzar söhbətin əsas funksiyalarına aid deyil:",opts:[{l:"A",t:"xarici mühitdəki tərəfdaşlarla işgüzar əlaqələrin yaradılması"},{l:"B",t:"informasiya mübadiləsi"},{l:"C",t:"əsaslandırma"},{l:"D",t:"başlanmış tədbir və proseslərə nəzarət və onların koordinasiyası"},{l:"E",t:"innovativ tədbir və proseslərin başlanılması"}],correct:2},
+];
+
+// =====================================================
+// APP STATE
+// =====================================================
+let quizQuestions = [];
+let currentIdx = 0;
+let score = 0;
+let answered = 0;
+let userAnswers = [];
+let timerInterval = null;
+let totalSeconds = 60 * 60;
+let elapsedSeconds = 0;
+let answered50 = false;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  quizQuestions = shuffle(ALL_QUESTIONS).slice(0, 50);
+  currentIdx = 0;
+  score = 0;
+  answered = 0;
+  userAnswers = Array(50).fill(null);
+  elapsedSeconds = 0;
+  answered50 = false;
+
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  document.getElementById('result-screen').style.display = 'none';
+
+  startTimer();
+  renderQuestion();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  let remaining = totalSeconds;
+  updateTimerDisplay(remaining);
+  timerInterval = setInterval(() => {
+    remaining--;
+    elapsedSeconds++;
+    updateTimerDisplay(remaining);
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      showResults();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay(sec) {
+  const m = Math.floor(sec / 60).toString().padStart(2, '0');
+  const s = (sec % 60).toString().padStart(2, '0');
+  document.getElementById('timer-val').textContent = `${m}:${s}`;
+  const box = document.getElementById('timer-box');
+  if (sec <= 300) box.classList.add('warn');
+  else box.classList.remove('warn');
+}
+
+function renderQuestion() {
+  const q = quizQuestions[currentIdx];
+  document.getElementById('q-counter').textContent = `Sual ${currentIdx + 1} / 50`;
+  document.getElementById('progress-bar').style.width = `${((currentIdx) / 50) * 100}%`;
+  document.getElementById('q-num').textContent = `Sual №${q.id}`;
+  document.getElementById('q-text').textContent = q.q;
+
+  const ol = document.getElementById('options-list');
+  ol.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-label">${opt.l}</span><span>${opt.text || opt.t}</span>`;
+    btn.onclick = () => selectAnswer(i);
+    ol.appendChild(btn);
+  });
+
+  const fb = document.getElementById('feedback-bar');
+  fb.className = 'feedback-bar';
+  fb.textContent = '';
+
+  document.getElementById('next-btn').disabled = true;
+}
+
+function selectAnswer(idx) {
+  const q = quizQuestions[currentIdx];
+  const buttons = document.querySelectorAll('.option-btn');
+  buttons.forEach(b => b.disabled = true);
+
+  userAnswers[currentIdx] = idx;
+  const isCorrect = idx === q.correct;
+  if (isCorrect) score++;
+
+  buttons[idx].classList.add(isCorrect ? 'correct' : 'wrong');
+  if (!isCorrect) {
+    buttons[q.correct].classList.add('correct');
+  }
+
+  const fb = document.getElementById('feedback-bar');
+  fb.classList.add('show');
+  if (isCorrect) {
+    fb.className = 'feedback-bar show correct-fb';
+    fb.textContent = '✓ Düzgün cavab!';
+  } else {
+    fb.className = 'feedback-bar show wrong-fb';
+    fb.textContent = `✗ Yanlış. Düzgün cavab: ${q.opts[q.correct].l} — ${q.opts[q.correct].text || q.opts[q.correct].t}`;
+  }
+
+  document.getElementById('next-btn').disabled = false;
+  answered++;
+}
+
+function nextQuestion() {
+  if (currentIdx < 49) {
+    currentIdx++;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function showResults() {
+  clearInterval(timerInterval);
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'block';
+
+  const pct = Math.round((score / 50) * 100);
+  document.getElementById('result-pct').textContent = `${pct}%`;
+
+  let grade = '', msg = '';
+  if (pct >= 91) { grade = 'Əla (5)'; msg = 'Mükəmməl nəticə! Siz mövzuya tam yiyələnmisiniz.'; }
+  else if (pct >= 81) { grade = 'Yaxşı (4+)'; msg = 'Çox yaxşı nəticə. Kiçik boşluqlar var.'; }
+  else if (pct >= 71) { grade = 'Yaxşı (4)'; msg = 'Yaxşı nəticə. Bəzi mövzuları təkrarlayın.'; }
+  else if (pct >= 61) { grade = 'Kafi (3+)'; msg = 'Orta nəticə. Daha çox hazırlanmaq lazımdır.'; }
+  else if (pct >= 51) { grade = 'Kafi (3)'; msg = 'Kafi nəticə. Mövzuları yenidən oxuyun.'; }
+  else { grade = 'Qeyri-kafi (2)'; msg = 'Zəif nəticə. Mövzuları ətraflı öyrənin.'; }
+
+  document.getElementById('result-grade').textContent = grade;
+  document.getElementById('result-msg').textContent = msg;
+  document.getElementById('r-correct').textContent = score;
+  document.getElementById('r-wrong').textContent = 50 - score;
+
+  const em = Math.floor(elapsedSeconds / 60);
+  const es = elapsedSeconds % 60;
+  document.getElementById('r-time').textContent = `${em}d ${es}s`;
+
+  // Color ring
+  const ring = document.getElementById('grade-ring');
+  if (pct >= 81) ring.style.borderColor = 'var(--correct)';
+  else if (pct >= 61) ring.style.borderColor = 'var(--accent)';
+  else ring.style.borderColor = 'var(--wrong)';
+
+  // Review
+  const rl = document.getElementById('review-list');
+  rl.innerHTML = '';
+  quizQuestions.forEach((q, i) => {
+    const ua = userAnswers[i];
+    const isCorrect = ua === q.correct;
+    const div = document.createElement('div');
+    div.className = `review-item ${isCorrect ? 'ri-correct' : 'ri-wrong'}`;
+
+    let answersHtml = '';
+    if (ua !== null && !isCorrect) {
+      answersHtml += `<div class="ri-ans"><span class="badge badge-wrong">Cavabınız</span><span>${q.opts[ua].l}. ${q.opts[ua].text||q.opts[ua].t}</span></div>`;
+    }
+    if (ua === null) {
+      answersHtml += `<div class="ri-ans"><span class="badge badge-given">Cavablanmadı</span></div>`;
+    }
+    answersHtml += `<div class="ri-ans"><span class="badge badge-correct">Düzgün</span><span>${q.opts[q.correct].l}. ${q.opts[q.correct].text||q.opts[q.correct].t}</span></div>`;
+
+    div.innerHTML = `
+      <div class="ri-qnum">Sual №${q.id} ${isCorrect ? '✓' : '✗'}</div>
+      <div class="ri-q">${q.q}</div>
+      <div class="ri-answers">${answersHtml}</div>
+    `;
+    rl.appendChild(div);
+  });
+
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function restartQuiz() {
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('start-screen').style.display = 'block';
+}
+</script>
+</body>
+</html>
